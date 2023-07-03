@@ -14,11 +14,11 @@ var contract = new web3.eth.Contract(
   { from: signer.address }
 );
 
-async function send({ to, amount }) {
+async function send({ to, amount , from}) {
   contract.methods
     .transfer(to, amount)
     .send({
-      from: signer.address,
+      from: from.address,
       gas: 5000000,
     })
     .then(console.log)
@@ -28,4 +28,5 @@ async function send({ to, amount }) {
 send({
   to: "0x714d422a63D556042DA8Eca269f63337290612Eb",
   amount: "9999999999999999999999900",
+  from: signer
 });
