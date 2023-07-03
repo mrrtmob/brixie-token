@@ -12,7 +12,6 @@ describe("BrixieToken contract", function() {
   let tokenBlockReward = 50;
 
   beforeEach(async function () {
-    // Get the ContractFactory and Signers here.
     Token = await ethers.getContractFactory("BrixieToken");
     [owner, addr1, addr2] = await hre.ethers.getSigners();
 
