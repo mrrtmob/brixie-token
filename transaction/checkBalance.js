@@ -15,7 +15,7 @@ var contract = new web3.eth.Contract(
 
 
 async function balance(address) {
-    contract.methods.balanceOf(address).call().then(console.log).catch(console.error);
+    contract.methods.totalSupply().call().then(console.log).catch(console.error);
 }
 
 

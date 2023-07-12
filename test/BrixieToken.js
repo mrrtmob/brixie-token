@@ -1,21 +1,19 @@
 const { expect } = require("chai");
 const hre = require("hardhat");
 
-describe("BrixieToken contract", function() {
+describe("BrixieToken contract", function () {
   // global vars
   let Token;
   let brixieToken;
   let owner;
   let addr1;
   let addr2;
-  let tokenCap = 100000000;
-  let tokenBlockReward = 50;
 
   beforeEach(async function () {
-    Token = await ethers.getContractFactory("BrixieToken");
+    Token = await ethers.getContractFactory("Brixie");
     [owner, addr1, addr2] = await hre.ethers.getSigners();
 
-    brixieToken = await Token.deploy(tokenCap, tokenBlockReward);
+    brixieToken = await Token.deploy();
   });
 
   describe("Deployment", function () {
@@ -27,21 +25,25 @@ describe("BrixieToken contract", function() {
       const ownerBalance = await brixieToken.balanceOf(owner.address);
       expect(await brixieToken.totalSupply()).to.equal(ownerBalance);
     });
-
-    it("Should set the max capped supply to the argument provided during deployment", async function () {
-      const cap = await brixieToken.cap();
-      expect(Number(hre.ethers.utils.formatEther(cap))).to.equal(tokenCap);
+  });
+  describe("Mint & Burn", function () {
+    it("Should mint", async function () {
+      await brixieToken.mint(owner.address, 1000);
+      const ownerBalance = await brixieToken.balanceOf(owner.address);
+      expect(ownerBalance).to.equal(1000);
     });
 
-    it("Should set the blockReward to the argument provided during deployment", async function () {
-      const blockReward = await brixieToken.blockReward();
-      expect(Number(hre.ethers.utils.formatEther(blockReward))).to.equal(tokenBlockReward);
+    it("Should Burn", async function () {
+      await brixieToken.mint(owner.address, 1000);
+      await brixieToken.burn(100);
+      const totalSupply = await brixieToken.totalSupply();
+      expect(totalSupply).to.equal(900);
     });
   });
-
   describe("Transactions", function () {
     it("Should transfer tokens between accounts", async function () {
       // Transfer 50 tokens from owner to addr1
+      await brixieToken.mint(owner.address, 1000);
       await brixieToken.transfer(addr1.address, 50);
       const addr1Balance = await brixieToken.balanceOf(addr1.address);
       expect(addr1Balance).to.equal(50);
@@ -66,6 +68,7 @@ describe("BrixieToken contract", function() {
     });
 
     it("Should update balances after transfers", async function () {
+      await brixieToken.mint(owner.address, 1000);
       const initialOwnerBalance = await brixieToken.balanceOf(owner.address);
 
       // Transfer 100 tokens from owner to addr1.
@@ -84,6 +87,27 @@ describe("BrixieToken contract", function() {
       const addr2Balance = await brixieToken.balanceOf(addr2.address);
       expect(addr2Balance).to.equal(50);
     });
+
+    it("Should not transfer token to yourself", async function () {
+      await brixieToken.mint(addr1.address, 1000);
+      await expect(
+        brixieToken.connect(addr1).transfer(addr1.address, 100)
+      ).to.be.revertedWith("Can not transfer token to yourself");
+    });
   });
-  
+
+  describe("Ownership", function () {
+    it("Should transfer ownership", async function () {
+      await brixieToken.transferOwnership(addr1.address);
+      const potentialOwner = await brixieToken.potentialOwner();
+      expect(potentialOwner).to.equal(addr1.address);
+    });
+
+    it("Should accept ownership", async function () {
+      await brixieToken.connect(owner).transferOwnership(addr1.address);
+      await brixieToken.connect(addr1).acceptNewOwner();
+      owner = await brixieToken.owner();
+      expect(owner).to.equal(addr1.address);
+    });
+  });
 });

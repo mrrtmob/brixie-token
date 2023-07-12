@@ -27,6 +27,6 @@ async function send({ to, amount , from}) {
 
 send({
   to: "0x714d422a63D556042DA8Eca269f63337290612Eb",
-  amount: "9999999999999999999999900",
+  amount: "9999999999999999900",
   from: signer
 });
